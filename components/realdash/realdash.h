@@ -68,9 +68,8 @@ void can_mode(uint8_t can_mode);
  private:
   uint32_t canid_;
 
-  //using number_type_t = enum { TYPE_NUMBER };
   using sensor_type_t = enum { TYPE_SENSOR, TYPE_BINARY_SENSOR, TYPE_TEXT_SENSOR, TYPE_NUMBER };
-    using sensors_t = struct {
+  using sensors_t = struct {
     
     uint32_t canid;
     sensor_type_t type;
@@ -94,18 +93,7 @@ void can_mode(uint8_t can_mode);
   #endif
     
 };
-/*
-  using numbers_t = struct {
-    
-    uint32_t canid;
-    number_type_t type;
-    
-  #ifdef USE_NUMBER
-      esphome::number::Number *number;
-  #endif
-    
-};
-*/
+
   std::vector<sensors_t> sensors_;
   //std::vector<numbers_t> numbers_;
   
