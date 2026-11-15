@@ -13,6 +13,22 @@ void Realdash::setup() {
 }
 
 
+#ifdef USE_NUMBER
+
+  void Realdash::register_number(uint32_t canid, esphome::number::Number *number, esphome::number::Number *number2) {
+  
+  //numbers_t s;
+  sensors_t s;
+  s.canid = canid;
+  s.number = number;
+  s.number2 = number2;
+  s.type = TYPE_NUMBER;
+    this->sensors_.push_back(s);
+
+  }
+
+#endif
+
 #ifdef USE_SENSOR
 
   void Realdash::register_sensor(uint32_t canid, esphome::sensor::Sensor *sensor, esphome::sensor::Sensor *sensor2) {
@@ -33,7 +49,24 @@ void Realdash::setup() {
 void Realdash::register_binary_sensor(uint32_t canid, esphome::binary_sensor::BinarySensor *binary_sensor) {
   sensors_t s;
   s.canid = canid;
-  s.binary_sensor = binary_sensor;
+  s.binary_sensor1 = binary_sensor1;
+  s.binary_sensor2 = binary_sensor2;
+  s.binary_sensor3 = binary_sensor3;
+  s.binary_sensor4 = binary_sensor4;
+  s.binary_sensor5 = binary_sensor5;
+  s.binary_sensor6 = binary_sensor6;
+  s.binary_sensor7 = binary_sensor7;
+  s.binary_sensor8 = binary_sensor8;
+  s.binary_sensor9 = binary_sensor9;
+  s.binary_sensor10 = binary_sensor10;
+  s.binary_sensor11 = binary_sensor11;
+  s.binary_sensor12 = binary_sensor12;
+  s.binary_sensor13 = binary_sensor13;
+  s.binary_sensor14 = binary_sensor14;
+  s.binary_sensor15 = binary_sensor15;
+  s.binary_sensor16 = binary_sensor16;
+  s.type = TYPE_BINARY_SENSOR;
+  
   this->sensors_.push_back(s);
   }
 #endif
@@ -41,6 +74,7 @@ void Realdash::register_binary_sensor(uint32_t canid, esphome::binary_sensor::Bi
 
 void Realdash::loop() {
 
+  
   for (sensors_t s : this->sensors_) {
     
     switch (s.type) {
@@ -50,8 +84,8 @@ void Realdash::loop() {
         continue;
         }
        if (s.sensor2 == nullptr) {
-        uint32_t test = 0x00;       
-        send44(s.canid, *(uint32_t*) &s.sensor->state, test);
+        //uint32_t zero = 0x00;       
+        send44(s.canid, *(uint32_t*) &s.sensor->state, zero);
        } else {
         send44(s.canid, *(uint32_t*) &s.sensor->state, *(uint32_t*) &s.sensor2->state);
        } 
@@ -62,40 +96,79 @@ void Realdash::loop() {
         //send it in uint32_t 
         //send44(s.canid, (uint32_t)s.sensor->state);
         //ESP_LOGD(TAG, "uint32_t  %08x", (uint32_t)s.sensor->state);
+           
+        break;
+#endif
+
+#ifdef USE_NUMBER
+      case TYPE_NUMBER:
+        if (!s.number->has_state()) {
+        continue;
+        }
+        if (s.number2 == nullptr) {
+        send44(s.canid, *(uint32_t*) &s.number->state);
+        } else {
+        send44(s.canid, *(uint32_t*) &s.number->state, *(uint32_t*) &s.number2->state);
+        } 
           
         break;
 #endif
+
 #ifdef USE_BINARY_SENSOR
       case TYPE_BINARY_SENSOR:
+        //uint32_t first4 = 0x00000000;
+        //uint32_t second4 = 0x00000000;
+        //uint8_t data[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
         if (!s.binary_sensor->has_state()) {
           continue;
         }
         // map bool to double
-        if (s.binary_sensor->state) {
-          val = 1;
+        if (s.binary_sensor2 != nullptr) {
+          if (s.binary_sensor1->state && s.binary_sensor2->state) {
+            data[1] = 0x11;
+          }
+          if (!s.binary_sensor1->state && s.binary_sensor2->state) {
+            data[1] = ox01;
+          }
+          if (s.binary_sensor1->state && !s.binary_sensor2->state) {
+            data[1] = ox10;
+          }
         }
+        if (s.binary_sensor->state) {
+           data1[1] = 0x10;
+        }
+       
+
+          first4 = ((uint32_t)data[1] << 24) | 
+                   ((uint32_t)zero8 << 16) | 
+                   ((uint32_t)zero8 << 8)  | 
+                   (uint32_t)zero8;
+          second4 = ((uint32_t)zero8 << 24) | 
+                    ((uint32_t)zero8 << 16) | 
+                    ((uint32_t)zero8 << 8)  | 
+                    (uint32_t)zero8;
+                 
+        send44(s.canid, first4, second4);
+
         break;
 #endif
       default:
-        ESP_LOGE(TAG, "type not known, name: %08x type: %d", s.canid, s.type);
+        //ESP_LOGE(TAG, "type not known, name: 0x%08 " PRIx32 " type: %d", s.canid, s.type); // %08x
+        //ESP_LOGE(TAG,    "type not known, name: 0x%08 type: %d" PRIx32, s.canid, s.type); // %08x
+        //ESP_LOGE("main", "Wert (HEX): 0x%08" PRIX32, s.canid);
         continue;
     }
   }
-
-
-  //  uint8_t payload[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0f, 0x10, 0x11};
-  //  size_t payload_len = sizeof(payload);
-
-     //send66(4, 19, payload, payload_len);
-     //send44(11, 2);
-     
-
 } 
 
 void Realdash::send66(uint32_t canid_, uint8_t size_identifier, const uint8_t *payload, size_t payload_len) {
   
   uint8_t data[MAX_FRAME_SIZE];
   size_t pos = 0;
+  //for (auto byte : frame66header) {
+  //      data[pos++] = byte;
+  //  }
   data[pos++] = 0x66;
   data[pos++] = 0x33;
   data[pos++] = 0x22;
@@ -136,6 +209,9 @@ void Realdash::send44(uint32_t canid_, uint32_t data1, uint32_t data2) {
   size_t pos = 0;
   
     // 4 byte header Frame 44
+    //for (auto byte : frame44header) {
+    //    data[pos++] = byte;
+    //}
   data[pos++] = 0x44;
   data[pos++] = 0x33;
   data[pos++] = 0x22;
@@ -233,10 +309,9 @@ void Realdash::dump_config(){
 
       ESP_LOGCONFIG(TAG, "  Realdash-Data:");
   for (sensors_t s : this->sensors_) {
-    ESP_LOGCONFIG(TAG,
-                  "    - CAN-ID: %08x \n",
-                  s.canid);
-  }
+    ESP_LOGCONFIG(TAG, "  - CAN-ID: 0x%08" PRIx32 "\n", s.canid);
+    
+     }
 
  }
 float Realdash::get_setup_priority() const { return esphome::setup_priority::AFTER_WIFI; }
