@@ -40,10 +40,7 @@ external_components:
 uart_tcp_server:
   id: tcp_serial
   port: 35000
-  max_clients: 1             # simultaneous connections (default 2, max 16)
-  rx_buffer_size: 4096       # per-client ring buffer (default 4096)
-  client_mode: fanout        # fanout (default) or exclusive
-  idle_timeout: 0ms          # kick idle clients (0 = disabled)
+  
 
 realdash:
   uart_id: tcp_serial
@@ -53,6 +50,14 @@ realdash:
       id2: sens2        # Sensor ID
     - canid: 0xa1234567 # same DEC 2703443303
       id: sens2         # Sensor ID, if not use id2 = id2 frame = 00 00 00 00
+  numbers::
+    - canid: 1          # same HEX 0x00000001
+      id: eingabe1      # Number ID
+      id2: eingabe2     # Number ID
+    - canid: 0x00000002 # same DEC 2
+      id: sens2         # Numberr ID, if not use id2 = id2 frame = 00 00 00 00
+  
+  
 
 
 number:
